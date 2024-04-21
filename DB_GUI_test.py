@@ -1,103 +1,94 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 import mysql.connector
 from mysql.connector import Error
 
-def create_db():
-    try:
-        conn = mysql.connector.connect(
-            host='localhost',       # or your host, e.g., '127.0.0.1'
-            user='your_username',   # your MySQL username
-            password='your_password', # your MySQL password
-            database='your_database'  # your database name
-        )
-        c = conn.cursor()
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS records (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255),
-                age INT
-            )
-        ''')
-        conn.commit()
-    except Error as e:
-        messagebox.showerror("Error", str(e))
-    finally:
-        if conn.is_connected():
-            conn.close()
+from dotenv import load_dotenv
+import os
 
-def add_record(name, age):
+load_dotenv()  # This loads the environment variables from .env file into the environment
+
+# Now you can use the environment variables
+db_password = os.getenv('DB_PASSWORD')
+
+def connect_to_db():
     try:
-        conn = mysql.connector.connect(
+        connection = mysql.connector.connect(
             host='localhost',
-            user='your_username',
-            password='your_password',
-            database='your_database'
+            user='root',
+            password=db_password,
+            database='hw1DB'
         )
-        c = conn.cursor()
-        c.execute('INSERT INTO records (name, age) VALUES (%s, %s)', (name, age))
-        conn.commit()
+        return connection
     except Error as e:
-        messagebox.showerror("Error", str(e))
-    finally:
-        if conn.is_connected():
-            conn.close()
-        view_records()
+        messagebox.showerror("Connection Error", str(e))
+        return None
 
-def view_records():
-    try:
-        conn = mysql.connector.connect(
-            host='localhost',
-            user='your_username',
-            password='your_password',
-            database='your_database'
-        )
-        c = conn.cursor()
-        c.execute('SELECT * FROM records')
-        records = c.fetchall()
-        listbox.delete(0, tk.END)
-        for record in records:
-            listbox.insert(tk.END, record)
-    except Error as e:
-        messagebox.showerror("Error", str(e))
-    finally:
-        if conn.is_connected():
-            conn.close()
+def fetch_players():
+    connection = connect_to_db()
+    if connection:
+        cursor = connection.cursor()
+        try:
+            cursor.execute("SELECT ID, Name, Rating FROM Player")
+            records = cursor.fetchall()
+            return records
+        except Error as e:
+            messagebox.showerror("Error fetching players", str(e))
+        finally:
+            cursor.close()
+            connection.close()
+    return []
 
-def delete_record():
-    try:
-        selected_item = listbox.curselection()[0]
-        id_to_delete = listbox.get(selected_item)[0]
-        conn = mysql.connector.connect(
-            host='localhost',
-            user='your_username',
-            password='your_password',
-            database='your_database'
-        )
-        c = conn.cursor()
-        c.execute('DELETE FROM records WHERE id=%s', (id_to_delete,))
-        conn.commit()
-    except Error as e:
-        messagebox.showerror("Error", str(e))
-    finally:
-        if conn.is_connected():
-            conn.close()
-        view_records()
+def display_players():
+    records = fetch_players()
+    for i in tree.get_children():
+        tree.delete(i)
+    for (id, name, rating) in records:
+        tree.insert("", "end", values=(id, name, rating))
 
-# GUI setup
-root = tk.Tk()
-root.title("Database Interface")
-entry_name = tk.Entry(root)
-entry_name.grid(row=0, column=1)
-entry_age = tk.Entry(root)
-entry_age.grid(row=1, column=1)
-add_button = tk.Button(root, text="Add Record", command=lambda: add_record(entry_name.get(), entry_age.get()))
-add_button.grid(row=2, column=1)
-view_button = tk.Button(root, text="View Records", command=view_records)
-view_button.grid(row=3, column=1)
-delete_button = tk.Button(root, text="Delete Selected", command=delete_record)
-delete_button.grid(row=4, column=1)
-listbox = tk.Listbox(root)
-listbox.grid(row=0, column=0, rowspan=4)
-create_db()
-root.mainloop()
+def add_player():
+    id = entry_id.get()
+    name = entry_name.get()
+    rating = entry_rating.get()
+    connection = connect_to_db()
+    if connection:
+        cursor = connection.cursor()
+        try:
+            cursor.execute("INSERT INTO Player (ID, Name, Rating) VALUES (%s, %s, %s)", (id, name, rating))
+            connection.commit()
+            display_players()
+            messagebox.showinfo("Success", "Player added successfully")
+        except Error as e:
+            messagebox.showerror("Error adding player", str(e))
+        finally:
+            cursor.close()
+            connection.close()
+
+app = tk.Tk()
+app.title("Database Interaction")
+app.geometry("400x300")
+
+frame = ttk.Frame(app, padding=10)
+frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+tree = ttk.Treeview(frame, columns=("ID", "Name", "Rating"), show="headings")
+tree.heading("ID", text="ID")
+tree.heading("Name", text="Name")
+tree.heading("Rating", text="Rating")
+tree.grid(row=0, column=0, columnspan=4)
+
+ttk.Button(frame, text="Refresh", command=display_players).grid(row=1, column=0)
+ttk.Label(frame, text="ID").grid(row=2, column=0)
+ttk.Label(frame, text="Name").grid(row=2, column=1)
+ttk.Label(frame, text="Rating").grid(row=2, column=2)
+
+entry_id = ttk.Entry(frame)
+entry_id.grid(row=3, column=0)
+entry_name = ttk.Entry(frame)
+entry_name.grid(row=3, column=1)
+entry_rating = ttk.Entry(frame)
+entry_rating.grid(row=3, column=2)
+
+ttk.Button(frame, text="Add Player", command=add_player).grid(row=3, column=3)
+
+app.mainloop()
