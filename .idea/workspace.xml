@@ -4,13 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ec0f00bb-9fbd-43e6-9ec6-8224cbdf128d" name="Changes" comment="Added table initialization. Only adds first two tables for some reason.">
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DB_GUI_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/DB_GUI_test.py" afterDir="false" />
-    </list>
+    <list default="true" id="ec0f00bb-9fbd-43e6-9ec6-8224cbdf128d" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -70,7 +64,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1713733728337</updated>
-      <workItem from="1713733729464" duration="8562000" />
+      <workItem from="1713733729464" duration="8584000" />
     </task>
     <task id="LOCAL-00001" summary="Added table initialization. Only adds first two tables for some reason.">
       <option name="closed" value="true" />
