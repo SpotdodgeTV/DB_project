@@ -26,78 +26,92 @@ def convertTime(date, hasTime=True):
 def init(c):
     create_schema_sql = f"CREATE SCHEMA IF NOT EXISTS {dbname}"
     create_database_sql = f"CREATE DATABASE IF NOT EXISTS {dbname}"
-    create_table_sql = """
-    CREATE TABLE IF NOT EXISTS section (
-        section_id INT AUTO_INCREMENT PRIMARY KEY,
-        num_of_students INT,
-        sem_year INT NOT NULL,
-        sem_term VARCHAR(6) NOT NULL,
-        instruct_id INT NOT NULL,
-        course_num VARCHAR(6) NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS objective (
-        obj_code INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(50) NOT NULL UNIQUE,
-        description VARCHAR(300)
-    );
-    
-    CREATE TABLE IF NOT EXISTS degree (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(50) NOT NULL,
-        level VARCHAR(10) NOT NULL,
-    );
-    
-    CREATE TABLE IF NOT EXISTS course (
-        code VARCHAR(8) NOT NULL PRIMARY KEY,
-        name VARCHAR(50) NOT NULL UNIQUE,
-    );
-    
-    CREATE TABLE IF NOT EXISTS degree_course (
-        course_code VARCHAR(8) NOT NULL,
-        degree_id INT NOT NULL,
-        is_core BOOL,
-        FOREIGN KEY (course_code) REFERENCES course(code),
-        FOREIGN KEY (degree_id) REFERENCES degree(id),
-        (course_code, degree_id) PRIMARY KEY
-    );
-    
-    CREATE TABLE IF NOT EXISTS obj_course (
-        name VARCHAR(50) NOT NULL,
-        level VARCHAR(10) NOT NULL,
-        PRIMARY KEY (name, level)
-    );
-    
-    CREATE TABLE IF NOT EXISTS semester (
-        year INT NOT NULL,
-        term VARCHAR(6) NOT NULL
-    );
-    
-    CREATE TABLE IF NOT EXISTS instructor (
-        id INT NOT NULL,
-        name VARCHAR(50) NOT NULL
-    );
-    
-    CREATE TABLE IF NOT EXISTS evaluation (
-        sem_year INT NOT NULL,
-        sem_term VARCHAR(6) NOT NULL,
-        section_id INT,
-        eval_obj VARCHAR(50) NOT NULL,
-        obj_code INT, 
-        course_num VARCHAR(6) NOT NULL,
-        instruct_id INT NOT NULL,
-        num_A INT NOT NULL,
-        num_B INT NOT NULL,
-        num_C INT NOT NULL,
-        num_F INT NOT NULL
-    );
-    """
+    create_table_queries = [
+        """
+        CREATE TABLE IF NOT EXISTS section (
+            section_id INT NOT NULL,
+            num_of_students INT,
+            sem_year INT NOT NULL,
+            sem_term VARCHAR(6) NOT NULL,
+            instruct_id INT NOT NULL,
+            course_num VARCHAR(6) NOT NULL,
+            PRIMARY KEY (section_id)  -- Added primary key constraint
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS objective (
+            obj_code INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(50) NOT NULL UNIQUE,
+            description VARCHAR(300)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS degree (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(50) NOT NULL,
+            level VARCHAR(10) NOT NULL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS course (
+            code VARCHAR(8) NOT NULL PRIMARY KEY,
+            name VARCHAR(50) NOT NULL UNIQUE
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS degree_course (
+            course_code VARCHAR(8) NOT NULL,
+            degree_id INT NOT NULL,
+            is_core BOOL,
+            FOREIGN KEY (course_code) REFERENCES course(code),
+            FOREIGN KEY (degree_id) REFERENCES degree(id),
+            PRIMARY KEY (course_code, degree_id)  -- Fixed primary key constraint
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS obj_course (
+            name VARCHAR(50) NOT NULL,
+            level VARCHAR(10) NOT NULL,
+            PRIMARY KEY (name, level)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS semester (
+            year INT NOT NULL,
+            term VARCHAR(6) NOT NULL,
+            PRIMARY KEY (year, term)  -- Added primary key constraint
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS instructor (
+            id INT NOT NULL PRIMARY KEY,
+            name VARCHAR(50) NOT NULL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS evaluation (
+            sem_year INT NOT NULL,
+            sem_term VARCHAR(6) NOT NULL,
+            section_id INT,
+            eval_obj VARCHAR(50) NOT NULL,
+            obj_code INT, 
+            course_num VARCHAR(6) NOT NULL,
+            instruct_id INT NOT NULL,
+            num_A INT NOT NULL,
+            num_B INT NOT NULL,
+            num_C INT NOT NULL,
+            num_F INT NOT NULL,
+            PRIMARY KEY (sem_year, sem_term, section_id, eval_obj, course_num, instruct_id)
+        )
+        """
+    ]
 
     # Execute SQL commands
     c.execute(create_schema_sql)
     c.execute(create_database_sql)
     c.execute(f"USE {dbname}")  # Switch to your database
-    c.execute(create_table_sql)
+    for query in create_table_queries:
+        c.execute(query)
 
 
 def e(c):
