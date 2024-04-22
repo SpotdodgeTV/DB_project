@@ -3,10 +3,10 @@ from tkinter import ttk, messagebox
 import mysql.connector
 from mysql.connector import Error
 
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import os
 
-load_dotenv()  # This loads the environment variables from .env file into the environment
+#load_dotenv()  # This loads the environment variables from .env file into the environment
 
 # Now you can use the environment variables
 db_password = os.getenv('DB_PASSWORD')
@@ -64,6 +64,7 @@ def add_player():
             cursor.close()
             connection.close()
 
+# gui code
 app = tk.Tk()
 app.title("Database Interaction")
 app.geometry("400x300")
