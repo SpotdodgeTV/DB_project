@@ -15,16 +15,16 @@ def createTables(c):
         """
         CREATE TABLE IF NOT EXISTS section (
             sect_id INT AUTO_INCREMENT PRIMARY KEY,
-            num_studs INT,
-            sem_year INT NOT NULL,
+            num_studs INT UNSIGNED,
+            sem_year INT UNSIGNED NOT NULL,
             sem_term VARCHAR(6) NOT NULL,
-            instruct_id INT NOT NULL,
+            instruct_id INT UNSIGNED NOT NULL,
             course_num VARCHAR(6) NOT NULL
         )
         """,
         """
         CREATE TABLE IF NOT EXISTS learning_obj (
-            obj_code INT AUTO_INCREMENT PRIMARY KEY,
+            obj_code INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             lo_title VARCHAR(50) NOT NULL UNIQUE,
             description VARCHAR(300)
         )
@@ -54,38 +54,38 @@ def createTables(c):
         """,
         """
         CREATE TABLE IF NOT EXISTS obj_course (
-            obj_code INT NOT NULL,
+            obj_code INT UNSIGNED NOT NULL,
             course_num VARCHAR(8) NOT NULL,
             PRIMARY KEY (obj_code, course_num)
         )
         """,
         """
         CREATE TABLE IF NOT EXISTS semester (
-            year INT NOT NULL,
+            year INT UNSIGNED NOT NULL,
             term VARCHAR(6) NOT NULL,
             PRIMARY KEY (year, term)  -- Added primary key constraint
         )
         """,
         """
         CREATE TABLE IF NOT EXISTS instructor (
-            instruct_id INT NOT NULL PRIMARY KEY,
+            instruct_id INT UNSIGNED NOT NULL PRIMARY KEY,
             instruct_name VARCHAR(50) NOT NULL
         )
         """,
         """
         CREATE TABLE IF NOT EXISTS evaluation (
-            sem_year INT NOT NULL,
+            sem_year INT UNSIGNED NOT NULL,
             sem_term VARCHAR(6) NOT NULL,
-            sect_id INT NOT NULL,
+            sect_id INT UNSIGNED NOT NULL,
             eval_obj VARCHAR(50) NOT NULL,
             eval_description VARCHAR(500),
-            obj_code INT, 
+            obj_code INT UNSIGNED, 
             course_num VARCHAR(6) NOT NULL,
-            instruct_id INT,
-            num_A INT,
-            num_B INT,
-            num_C INT,
-            num_F INT,
+            instruct_id INT UNSIGNED,
+            num_A INT UNSIGNED,
+            num_B INT UNSIGNED,
+            num_C INT UNSIGNED,
+            num_F INT UNSIGNED,
             PRIMARY KEY (sem_year, sem_term, sect_id, eval_obj, course_num)
         )
         """

@@ -134,7 +134,7 @@ class App(tk.Tk):
         # GUI creation
 
         # Create and add pages
-        for i, Page in enumerate([Degree, Course, Objective, DegCourse, Instructor, Section, Evaluation,
+        for i, Page in enumerate([Degree, Course, Objective, DegCourse, ObjCourse, Instructor, Section, Evaluation,
                                   DegreeSearch, InstructorSearch, CourseSearch]):
             page = Page(self.container, self)
             self.pages[i] = page
