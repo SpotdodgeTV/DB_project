@@ -24,13 +24,13 @@ def populateTestData(c):
 
     # Insert data into 'degree_course'
     degree_courses = [
-        ('Computer Science', 'BS', 'CS101', True, '20'),
-        ('Computer Science', 'BS', 'CS102', True, '30'),
-        ('Mathematics', 'BS', 'MA101', True, '40'),
-        ('Engineering', 'BS', 'EN101', True, '50')
+        ('Computer Science', 'BS', 'CS101', True),
+        ('Computer Science', 'BS', 'CS102', True),
+        ('Mathematics', 'BS', 'MA101', True),
+        ('Engineering', 'BS', 'EN101', True)
     ]
     for dc in degree_courses:
-        c.execute("INSERT INTO degree_course (deg_name, deg_level, course_num, is_core, degree_id) VALUES (%s, %s, %s, %s, %s);", dc)
+        c.execute("INSERT INTO degree_course (deg_name, deg_level, course_num, is_core) VALUES (%s, %s, %s, %s);", dc)
 
     # Insert data into 'learning_obj'
     learning_objs = [
@@ -40,7 +40,7 @@ def populateTestData(c):
         (4, 'Engineering Principles', 'Learn fundamental engineering concepts')
     ]
     for lo in learning_objs:
-        c.execute("INSERT INTO learning_obj (obj_code, lo_title, description) VALUES (%s, %s, %s);", lo)
+        c.execute("INSERT INTO learning_obj (lo_title, description) VALUES (%s, %s, %s);", lo)
 
     # Insert data into 'obj_course'
     obj_courses = [
@@ -56,7 +56,7 @@ def populateTestData(c):
         c.execute("INSERT INTO obj_course (obj_code, course_num) VALUES (%s, %s);", oc)
 
     # Commit changes to the database
-    c.connection.commit()
+    # c.connection.commit()
 
 
 
@@ -85,9 +85,9 @@ def getLearningObjectivesForDegree(c, deg_name, deg_level):
     return c.fetchall()
 
 
-cr, cn = q.connect_to_db()
-q.dropAll(cr)
-q.createTables(cr)
+# cr, cn = q.connect_to_db()
+# q.dropAll(cr)
+# q.createTables(cr)
 # if cr is None:
 #     print("Table creation failed.")
 
@@ -119,8 +119,8 @@ q.createTables(cr)
 # print(result)
 # print(len(result))
 
-populateTestData(cr)
-
-print(listCoursesByObjectives(cr, "Computer Science", "BS"))
-print(getLearningObjectivesForDegree(cr, "Computer Science", "BS" ))
-q.close_db(cn)
+# populateTestData(cr)
+#
+# print(listCoursesByObjectives(cr, "Computer Science", "BS"))
+# print(getLearningObjectivesForDegree(cr, "Computer Science", "BS" ))
+# q.close_db(cn)

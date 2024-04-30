@@ -2,6 +2,7 @@ import pymysql
 import pymysql.cursors
 import os
 from dotenv import load_dotenv
+import nicoPlayground
 
 load_dotenv()
 db_password = os.getenv('DB_PASSWORD')
@@ -47,7 +48,6 @@ def createTables(c):
             deg_level VARCHAR(8) NOT NULL,
             course_num VARCHAR(8) NOT NULL,
             is_core BOOL,
-            degree_id int NOT NULL,
             FOREIGN KEY (course_num) REFERENCES course(course_num),
             PRIMARY KEY (course_num, deg_name, deg_level)
         )
@@ -69,7 +69,7 @@ def createTables(c):
         """
         CREATE TABLE IF NOT EXISTS instructor (
             instruct_id INT NOT NULL PRIMARY KEY,
-            instruct_num VARCHAR(50) NOT NULL
+            instruct_name VARCHAR(50) NOT NULL
         )
         """,
         """
@@ -118,7 +118,7 @@ def enterDegCourse(c, info):
 
 
 def enterInstructor(c, info):
-    query = 'INSERT INTO instructor (instruct_id, instruct_num) VALUES (%s,%s)'
+    query = 'INSERT INTO instructor (instruct_id, instruct_name) VALUES (%s,%s)'
     c.execute(query, info)
 
 
@@ -147,8 +147,8 @@ def enterObjCourse(c, info):
 
 def enterEvaluation(c, info):
     query = '''
-    INSERT INTO evaluation (sem_year, sem_term, section_id, eval_obj, obj_code, course_num, instruct_id, num_A, num_B, num_C, num_F, description)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'''
+    INSERT INTO evaluation (sem_year, sem_term, sect_id, eval_obj, eval_description, obj_code, course_num, instruct_id, num_A, num_B, num_C, num_F)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'''
     c.execute(query, info)
 
 
@@ -228,6 +228,37 @@ def fromDegreeGetObj(c, info):
         description
     FROM
         learning_obj;
+    '''
+    c.execute(query, info)
+    return c.fetchall()
+
+def fromCourseGetSection(c, info):
+    query = '''
+    SELECT s.* 
+        FROM Section s
+        JOIN Degree_Course dc ON s.course_num = dc.course_num
+        WHERE dc.deg_name = %s AND dc.deg_level = %s     
+        ORDER BY s.sem_year, 
+                 CASE s.sem_term 
+                     WHEN 'Fall' THEN 1 
+                     WHEN 'Spring' THEN 2 
+                     WHEN 'Summer' THEN 3 
+                     ELSE 4 
+                 END;
+    '''
+    c.execute(query, info)
+    return c.fetchall()
+
+def fromInstructorGetSections(c, info):
+    query = '''
+    SELECT 
+        s.sect_id, s.course_num
+    FROM 
+        Section s
+    JOIN 
+        Instructor i ON s.instruct_id = i.instruct_id
+    WHERE 
+        i.instruct_id = %s AND s.sem_year = %s  AND s.sem_term = %s;
     '''
     c.execute(query, info)
     return c.fetchall()
@@ -362,7 +393,10 @@ def connect_to_db():
     cr.execute(create_database_sql)
     createTables(cr)
     print(db_name)
+    nicoPlayground.populateTestData(cr)
     cr.execute(f"USE {db_name}")
+
+
     return cr, cn
 
 
