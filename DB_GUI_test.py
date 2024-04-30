@@ -135,7 +135,7 @@ class App(tk.Tk):
 
         # Create and add pages
         for i, Page in enumerate([Degree, Course, Objective, DegCourse, Instructor, Section, Evaluation,
-                                  DegreeSearch, InstructorSearch]):
+                                  DegreeSearch, InstructorSearch, CourseSearch]):
             page = Page(self.container, self)
             self.pages[i] = page
             page.grid(row=1, column=0, sticky="nsew")
@@ -624,12 +624,11 @@ class DegreeSearch(tk.Frame):
 
         tk.Button(self, text="Search",
                   command=lambda: (
-                      info := (self.entry_name.get(), self.entry_level.get()),
-                      populateTree(self.treeCourse,
-                                   q.fromDegreeGetCourse(cr, info)),
-                      populateTree(
-                          self.treeSect, q.fromDegreeGetSects(cr, info))
-
+                        info := (self.entry_name.get(), self.entry_level.get()),
+                        populateTree(self.treeCourse, q.fromDegreeGetCourse(cr, info)),
+                        populateTree(self.treeSect, q.fromDegreeGetSects(cr, info)),
+                        populateTree(self.treeObj, q.getLearningObjectivesForDegree(cr, info)),
+                        populateTree(self.treeCO, q.listCoursesByObjectives(cr, info))
                   )
                   ).grid(row=1, column=5)
 
@@ -643,7 +642,7 @@ class DegreeSearch(tk.Frame):
         self.treeCourse.grid(row=3, column=0, columnspan=2)
 
         ttk.Label(self, text="Associated Sections",
-                  anchor="center").grid(row=2, column=3)
+                  anchor="center").grid(row=2, column=4)
         self.treeSect = ttk.Treeview(
             self, columns=("Number", "SectionID", "SemTerm", "SemYear"), show="headings")
         self.treeSect.heading("Number", text="Section ID")
@@ -652,19 +651,23 @@ class DegreeSearch(tk.Frame):
         self.treeSect.heading("SemYear", text="Semster Year")
         self.treeSect.grid(row=3, column=4, columnspan=2)
 
-        # ttk.Label(self, text="Associated Objectives", anchor="center").grid(row=2, column=6)
-        # self.treeSect = ttk.Treeview(self, columns=("Obj", "IsCore"), show="headings")
-        # self.treeSect.heading("Objective", text="Objective")
-        # self.treeSect.grid(row=3, column=6, columnspan=2)
-        #
-        # populateTree(self.treeSect, q.fromDegreeGetObj(cr, info))
+        ttk.Label(self, text="Associated Objectives", anchor="center").grid(row=2, column=6)
+        self.treeObj = ttk.Treeview(self, columns=("Obj Code", "Obj Title"), show="headings")
+        self.treeObj.heading("Obj Code", text="Obj Code")
+        self.treeObj.heading("Obj Title", text="Obj Title")
+        self.treeObj.grid(row=3, column=6, columnspan=2)
 
-        # ttk.Button(self, text="Refresh", command=lambda: displayAll(self.treeCourse, cr, self.name)).grid(row=3, column=1)
-        # ttk.Button(self, text="Clear", command=lambda: clearAll(self.treeCourse, cr, self.name)).grid(row=3, column=2)
-
+        ttk.Label(self, text="Course w/ Obj", anchor="center").grid(row=2, column=8)
+        self.treeCO = ttk.Treeview(self, columns=("Course Num", "Obj Code"), show="headings")
+        self.treeCO.heading("Course Num", text="Obj Title")
+        self.treeCO.heading("Obj Code", text="Course Number")
+        self.treeCO.grid(row=3, column=8, columnspan=2)
+        
+        ttk.Button(self, text="Refresh", command=lambda: displayAll(self.treeCourse, cr, self.name)).grid(row=6, column=1)
+        ttk.Button(self, text="Clear", command=lambda: clearAll(self.treeCourse, cr, self.name)).grid(row=6, column=2)
 
 class CourseSearch(tk.Frame):
-    def __init__(self, parent, controller: App, name="Degree Search"):
+     def __init__(self, parent, controller: App, name="Course Search"):
         cr = controller.cursor
 
         tk.Frame.__init__(self, parent)
@@ -672,57 +675,53 @@ class CourseSearch(tk.Frame):
         label = tk.Label(self, text=name)
         label.grid(row=0, column=0, columnspan=4)
 
-        ttk.Label(self, text="Course Number",
-                  anchor="center").grid(row=1, column=0)
-        self.entry_name = ttk.Entry(self)
-        self.entry_name.grid(row=1, column=1)
-        ttk.Label(self, text="Course Name",
-                  anchor="center").grid(row=1, column=2)
-        self.entry_level = ttk.Entry(self)
-        self.entry_level.grid(row=1, column=3)
+        # Input fields for the instructor ID and date range
+        ttk.Label(self, text="Course Number", anchor="center").grid(row=1, column=0)
+        self.entry_instructor_id = ttk.Entry(self)
+        self.entry_instructor_id.grid(row=1, column=1)
 
-        info = (self.entry_name.get(), self.entry_level.get())
+        ttk.Label(self, text="Start Year", anchor="center").grid(row=1, column=2)
+        self.entry_start_year = ttk.Entry(self)
+        self.entry_start_year.grid(row=1, column=3)
 
+        ttk.Label(self, text="End Year", anchor="center").grid(row=1, column=4)
+        self.entry_end_year = ttk.Entry(self)
+        self.entry_end_year.grid(row=1, column=5)
+
+        ttk.Label(self, text="Start Term", anchor="center").grid(row=2, column=0)
+        self.entry_start_term = ttk.Entry(self)
+        self.entry_start_term.grid(row=2, column=1)
+
+        ttk.Label(self, text="End Term", anchor="center").grid(row=2, column=2)
+        self.entry_end_term = ttk.Entry(self)
+        self.entry_end_term.grid(row=2, column=3)
+
+        # Search button
+        
         tk.Button(self, text="Search",
                   command=lambda: (
-                      populateTree(self.treeCourse,
-                                   q.fromDegreeGetCourse(cr, info)),
-                      populateTree(
-                          self.treeSect, q.fromDegreeGetSects(cr, info))
-                      populateTree(self.treeCourse,
-                                   q.fromDegreeGetCourse(cr, info)),
-                      populateTree(
-                          self.treeSect, q.fromDegreeGetSects(cr, info))
+                      info := (self.entry_instructor_id.get(),
+                                self.entry_start_year.get(),
+                                self.entry_end_year.get(),
+                                self.entry_start_year.get(),
+                                self.entry_start_term.get(),
+                                self.entry_end_year.get(),
+                                self.entry_end_term.get()),
+                      populateTree(self.treeSect,
+                                   q.getCourseSections(cr, info))
 
                   )
                   ).grid(row=1, column=5)
 
-        # info display
-        ttk.Label(self, text="Associated Courses",
-                  anchor="center").grid(row=2, column=0)
-        self.treeCourse = ttk.Treeview(
-            self, columns=("Name", "IsCore"), show="headings")
-        self.treeCourse.heading("Name", text="Names")
-        self.treeCourse.heading("IsCore", text="IsCore")
-        self.treeCourse.grid(row=3, column=0, columnspan=2)
+        # Treeview for displaying sections
+        ttk.Label(self, text="Instructor Sections", anchor="center").grid(row=3, column=0)
+        self.treeSect = ttk.Treeview(self, columns=("SectID", "CourseNum", "SemTerm", "SemYear"), show="headings")
+        self.treeSect.heading("SectID", text="Section ID")
+        self.treeSect.heading("CourseNum", text="Course Number")
+        self.treeSect.heading("SemTerm", text="Semester Term")
+        self.treeSect.heading("SemYear", text="Semester Year")
+        self.treeSect.grid(row=4, column=0, columnspan=6)
 
-        ttk.Label(self, text="Associated Sections",
-                  anchor="center").grid(row=2, column=3)
-        self.treeSect = ttk.Treeview(
-            self, columns=("Name", "IsCore"), show="headings")
-        self.treeSect.heading("Name", text="Names")
-        self.treeSect.heading("IsCore", text="IsCore")
-        self.treeSect.grid(row=3, column=3, columnspan=2)
-
-        # ttk.Label(self, text="Associated Objectives", anchor="center").grid(row=2, column=6)
-        # self.treeSect = ttk.Treeview(self, columns=("Obj", "IsCore"), show="headings")
-        # self.treeSect.heading("Objective", text="Objective")
-        # self.treeSect.grid(row=3, column=6, columnspan=2)
-        #
-        # populateTree(self.treeSect, q.fromDegreeGetObj(cr, info))
-
-        # ttk.Button(self, text="Refresh", command=lambda: displayAll(self.treeCourse, cr, self.name)).grid(row=3, column=1)
-        # ttk.Button(self, text="Clear", command=lambda: clearAll(self.treeCourse, cr, self.name)).grid(row=3, column=2)
 
 class InstructorSearch(tk.Frame):
     def __init__(self, parent, controller: App, name="Instructor Search"):

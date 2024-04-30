@@ -75,29 +75,29 @@ def populateTestData(c):
 
 
 
-def listCoursesByObjectives(c, degree_name, deg_level):
-    query = """
-    SELECT lo.lo_title AS Objective, GROUP_CONCAT(dc.course_num ORDER BY dc.course_num) AS Courses
-    FROM learning_obj lo
-    JOIN obj_course oc ON lo.obj_code = oc.obj_code
-    JOIN degree_course dc ON oc.course_num = dc.course_num
-    WHERE dc.deg_name = %s AND dc.deg_level = %s
-    GROUP BY lo.lo_title;
-    """
-    c.execute(query, (degree_name, deg_level))
-    return c.fetchall()
+# def listCoursesByObjectives(c, degree_name, deg_level):
+#     query = """
+#     SELECT lo.lo_title AS Objective, GROUP_CONCAT(dc.course_num ORDER BY dc.course_num) AS Courses
+#     FROM learning_obj lo
+#     JOIN obj_course oc ON lo.obj_code = oc.obj_code
+#     JOIN degree_course dc ON oc.course_num = dc.course_num
+#     WHERE dc.deg_name = %s AND dc.deg_level = %s
+#     GROUP BY lo.lo_title;
+#     """
+#     c.execute(query, (degree_name, deg_level))
+#     return c.fetchall()
 
 
-def getLearningObjectivesForDegree(c, deg_name, deg_level):
-    query = """
-    SELECT DISTINCT lo.obj_code, lo.lo_title, lo.description
-    FROM learning_obj lo
-    JOIN obj_course oc ON lo.obj_code = oc.obj_code
-    JOIN degree_course dc ON oc.course_num = dc.course_num
-    WHERE dc.deg_name = %s AND dc.deg_level = %s;
-    """
-    c.execute(query, (deg_name, deg_level))
-    return c.fetchall()
+# def getLearningObjectivesForDegree(c, deg_name, deg_level):
+#     query = """
+#     SELECT DISTINCT lo.obj_code, lo.lo_title, lo.description
+#     FROM learning_obj lo
+#     JOIN obj_course oc ON lo.obj_code = oc.obj_code
+#     JOIN degree_course dc ON oc.course_num = dc.course_num
+#     WHERE dc.deg_name = %s AND dc.deg_level = %s;
+#     """
+#     c.execute(query, (deg_name, deg_level))
+#     return c.fetchall()
 
 
 # cr, cn = q.connect_to_db()
@@ -139,6 +139,7 @@ def getLearningObjectivesForDegree(c, deg_name, deg_level):
 # # print(listCoursesByObjectives(cr, "Computer Science", "BS"))
 # # print(getLearningObjectivesForDegree(cr, "Computer Science", "BS" ))
 # print(q.fromDegreeGetCourse(cr, ("Mathematics", "BS")))
-# print(q.getInstructorSections(cr, 1234, 2000, "Fall", 2050, "Spring"))
+# # print(q.getInstructorSections(cr, 1234, 2000, "Fall", 2050, "Spring"))
+# print(q.listCoursesByObjectives(cr, ("Computer Science", "BS")))
 
 # q.close_db(cn)

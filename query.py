@@ -176,6 +176,50 @@ def getInstructorSections(c, info):
     c.execute(query, info)
     return c.fetchall()
 
+def getCourseSections(c, info):
+    query = '''
+    SELECT 
+        sect_id, 
+        course_num, 
+        sem_term, 
+        sem_year
+    FROM 
+        section 
+    WHERE 
+        course_num = %s AND
+        (
+            (sem_year > %s AND sem_year < %s) 
+            OR (sem_year = %s AND sem_term >= %s) 
+            OR (sem_year = %s AND sem_term <= %s)  
+        )
+
+    '''
+    # params = (instructor_id, start_year - 1, end_year + 1, start_year, start_term, end_year, end_term)
+    
+    c.execute(query, info)
+    return c.fetchall()
+
+def getLearningObjectivesForDegree(c, info):
+    query = '''
+    SELECT DISTINCT lo.obj_code, lo.lo_title, lo.description
+    FROM learning_obj lo
+    JOIN obj_course oc ON lo.obj_code = oc.obj_code
+    JOIN degree_course dc ON oc.course_num = dc.course_num
+    WHERE dc.deg_name = %s AND dc.deg_level = %s;
+    '''
+    c.execute(query, info)
+    return c.fetchall()
+
+
+def listCoursesByObjectives(c, info):
+    query = '''
+    SELECT obj_course.obj_code, degree_course.course_num
+    FROM obj_course
+    JOIN degree_course ON obj_course.course_num = degree_course.course_num
+    WHERE degree_course.deg_name = %s AND degree_course.deg_level = %s;
+    '''
+    c.execute(query, info)
+    return c.fetchall()
 
 def getEval(c, info):
     query = '''
@@ -324,17 +368,17 @@ def dropAll(c):
         c.execute(f"DROP TABLE {table_name}")
         print(f"{table_name} dropped")
 
-def listCoursesByObjectives(c, degree_name):
-    query = """
-    SELECT lo.lo_title AS Objective, GROUP_CONCAT(dc.course_num ORDER BY dc.course_num) AS Courses
-    FROM learning_obj lo
-    JOIN obj_course oc ON lo.obj_code = oc.obj_code
-    JOIN degree_course dc ON oc.course_num = dc.course_num
-    WHERE dc.deg_name = %s
-    GROUP BY lo.lo_title;
-    """
-    c.execute(query, (degree_name,))
-    return c.fetchall()
+# def listCoursesByObjectives(c, info):
+#     query = """
+#     SELECT lo.lo_title AS Objective, GROUP_CONCAT(dc.course_num ORDER BY dc.course_num) AS Courses
+#     FROM learning_obj lo
+#     JOIN obj_course oc ON lo.obj_code = oc.obj_code
+#     JOIN degree_course dc ON oc.course_num = dc.course_num
+#     WHERE dc.deg_name = %s
+#     GROUP BY lo.lo_title;
+#     """
+#     c.execute(query, info)
+#     return c.fetchall()
 
 
 # def driver(cr, filename):
