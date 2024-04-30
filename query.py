@@ -279,6 +279,18 @@ def dropAll(c):
         c.execute(f"DROP TABLE {table_name}")
         print(f"{table_name} dropped")
 
+def listCoursesByObjectives(c, degree_name):
+    query = """
+    SELECT lo.lo_title AS Objective, GROUP_CONCAT(dc.course_num ORDER BY dc.course_num) AS Courses
+    FROM learning_obj lo
+    JOIN obj_course oc ON lo.obj_code = oc.obj_code
+    JOIN degree_course dc ON oc.course_num = dc.course_num
+    WHERE dc.deg_name = %s
+    GROUP BY lo.lo_title;
+    """
+    c.execute(query, (degree_name,))
+    return c.fetchall()
+
 
 # def driver(cr, filename):
 #     with open(filename, newline='') as csvfile:
