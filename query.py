@@ -201,7 +201,9 @@ def fromDegreeGetCourse(c, info):
         Degree_Course.deg_name = %s AND Degree_Course.deg_level = %s;
     '''
     c.execute(query, info)
-    return c.fetchall()
+    res = c.fetchall()
+    print(res)
+    return res
 
 def fromDegreeGetSects(c, info):
     query = '''

@@ -563,12 +563,11 @@ class DegreeSearch(tk.Frame):
         self.entry_level.grid(row=1, column=3)
 
         info = (self.entry_name.get(), self.entry_level.get())
-
+        print("INFO: " , info)
         tk.Button(self, text="Search",
                   command=lambda: (
                       populateTree(self.treeCourse, q.fromDegreeGetCourse(cr, info)),
                       populateTree(self.treeSect, q.fromDegreeGetSects(cr, info))
-
                   )
                   ).grid(row=1, column=5)
 
@@ -617,8 +616,8 @@ class CourseSearch(tk.Frame):
         tk.Button(self, text="Search",
                   command=lambda: (
                       populateTree(self.treeCourse, q.fromDegreeGetCourse(cr, info)),
-                      populateTree(self.treeSect, q.fromDegreeGetSects(cr, info))
 
+                      populateTree(self.treeSect, q.fromDegreeGetSects(cr, info))
                   )
                   ).grid(row=1, column=5)
 
@@ -653,6 +652,7 @@ def populateTree(tree, values):
 
     # Insert degrees into the treeview
     for value in values:
+        print(value)
         tree.insert("", "end", values=value)
 
 
@@ -719,8 +719,6 @@ def addDummyData(cr):
     result = q.getTable(cr, "course")
     print(result)
     print(len(result))
-
-    q.close_db(cn)
 
 
 # class Page2(tk.Frame):
