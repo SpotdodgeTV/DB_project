@@ -689,6 +689,10 @@ class CourseSearch(tk.Frame):
                                    q.fromDegreeGetCourse(cr, info)),
                       populateTree(
                           self.treeSect, q.fromDegreeGetSects(cr, info))
+                      populateTree(self.treeCourse,
+                                   q.fromDegreeGetCourse(cr, info)),
+                      populateTree(
+                          self.treeSect, q.fromDegreeGetSects(cr, info))
 
                   )
                   ).grid(row=1, column=5)
@@ -851,6 +855,8 @@ def addDummyData(cr):
     result = q.getTable(cr, "course")
     print(result)
     print(len(result))
+
+    q.close_db(cn)
 
     q.close_db(cn)
 
