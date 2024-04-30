@@ -1,30 +1,24 @@
 import pymysql
 import pymysql.cursors
-from pymysql import connect
-# from dotenv import load_dotenv
 import os
-from os import getenv
-import csv
-from datetime import datetime
+from dotenv import load_dotenv
 
+load_dotenv()
 db_password = os.getenv('DB_PASSWORD')
 db_name = os.getenv('DB_NAME')
 
 
 # data manipulation commands
 def createTables(c):
-    create_schema_sql = f"CREATE SCHEMA IF NOT EXISTS {db_name}"
-    create_database_sql = f"CREATE DATABASE IF NOT EXISTS {db_name}"
     create_table_queries = [
         """
         CREATE TABLE IF NOT EXISTS section (
-            sect_id INT NOT NULL,
+            sect_id INT AUTO_INCREMENT PRIMARY KEY,
             num_studs INT,
             sem_year INT NOT NULL,
             sem_term VARCHAR(6) NOT NULL,
             instruct_id INT NOT NULL,
-            course_num VARCHAR(6) NOT NULL,
-            PRIMARY KEY (sect_id)
+            course_num VARCHAR(6) NOT NULL
         )
         """,
         """
@@ -60,11 +54,9 @@ def createTables(c):
         """,
         """
         CREATE TABLE IF NOT EXISTS obj_course (
-            name VARCHAR(50) NOT NULL,
-            level VARCHAR(10) NOT NULL,
-            course_code VARCHAR(8) NOT NULL,
-            is_core BOOL,
-            PRIMARY KEY (name, level)
+            obj_code INT NOT NULL,
+            course_num VARCHAR(8) NOT NULL,
+            PRIMARY KEY (obj_code, course_num)
         )
         """,
         """
@@ -84,25 +76,23 @@ def createTables(c):
         CREATE TABLE IF NOT EXISTS evaluation (
             sem_year INT NOT NULL,
             sem_term VARCHAR(6) NOT NULL,
-            section_id INT,
+            sect_id INT NOT NULL,
             eval_obj VARCHAR(50) NOT NULL,
-            eval_description VARCHAR(500) NOT NULL,
+            eval_description VARCHAR(500),
             obj_code INT, 
             course_num VARCHAR(6) NOT NULL,
-            instruct_id INT NOT NULL,
-            num_A INT NOT NULL,
-            num_B INT NOT NULL,
-            num_C INT NOT NULL,
-            num_F INT NOT NULL,
-            PRIMARY KEY (sem_year, sem_term, section_id, eval_obj, course_num, instruct_id)
+            instruct_id INT,
+            num_A INT,
+            num_B INT,
+            num_C INT,
+            num_F INT,
+            PRIMARY KEY (sem_year, sem_term, sect_id, eval_obj, course_num)
         )
         """
     ]
 
     # Execute SQL commands
-    c.execute(create_schema_sql)
-    c.execute(create_database_sql)
-    c.execute(f"USE {db_name}")  # Switch to your database
+
     for query in create_table_queries:
         c.execute(query)
 
@@ -119,7 +109,7 @@ def enterCourse(c, info):
     c.execute(query, info)
 
 
-def connectCourseToDeg(c, info):
+def enterDegCourse(c, info):
     query = '''
     INSERT INTO degree_course (deg_name, deg_level, course_num, is_core)
     VALUES (%s, %s, %s, %s);
@@ -128,13 +118,13 @@ def connectCourseToDeg(c, info):
 
 
 def enterInstructor(c, info):
-    query = 'INSERT INTO course (instruct_id, instruct_num) VALUES (%s,%s)'
+    query = 'INSERT INTO instructor (instruct_id, instruct_num) VALUES (%s,%s)'
     c.execute(query, info)
 
 
 def enterSection(c, info):
     query = '''
-    INSERT INTO section (section_id, num_of_students, sem_year, sem_term, instruct_ID, course_num) 
+    INSERT INTO section (sect_id, num_studs, sem_year, sem_term, instruct_ID, course_num) 
     VALUES (%s, %s, %s, %s, %s, %s)
     '''
     c.execute(query, info)
@@ -142,15 +132,15 @@ def enterSection(c, info):
 
 def enterObjective(c, info):
     query = '''
-    INSERT INTO objective (obj_code, title, description) VALUES (%s, %s, %s)
+    INSERT INTO learning_obj (lo_title, description) VALUES (%s, %s)
     '''
     c.execute(query, info)
 
 
-def connectObjToCourse(c, info):
+def enterObjCourse(c, info):
     query = '''
-    INSERT INTO obj_course (name, level, course_code, is_core)
-    VALUES (%s, %s, %s, %s);
+    INSERT INTO obj_course (course_num, obj_code)
+    VALUES (%s, %s);
     '''
     c.execute(query, info)
 
@@ -183,7 +173,7 @@ def getEval(c, info):
         e.#_C as NumberOfC,
         e.#_F as NumberOfF,
         e.eval_descript,
-        e.deg_name
+        e.deg_name,
         e.deg_lvl 
     FROM
         Evaluation e
@@ -208,10 +198,39 @@ def fromDegreeGetCourse(c, info):
     JOIN
         Course ON Degree_Course.course_num = Course.course_num
     WHERE
-        Degree_Course.deg_name = %s AND Degree_Course.deg_lvl = %s;
+        Degree_Course.deg_name = %s AND Degree_Course.deg_level = %s;
     '''
-    c.execute(query)
+    c.execute(query, info)
+    return c.fetchall()
 
+def fromDegreeGetSects(c, info):
+    query = '''
+    SELECT s.* 
+    FROM Section s
+    JOIN degree_course dc ON s.course_num = dc.course_num
+    WHERE dc.deg_name = %s AND dc.deg_level = %s     
+    ORDER BY s.sem_year, 
+             CASE s.sem_term 
+                 WHEN 'Fall' THEN 1 
+                 WHEN 'Spring' THEN 2 
+                 WHEN 'Summer' THEN 3 
+                 ELSE 4 
+             END;
+    '''
+    c.execute(query, info)
+    return c.fetchall()
+
+def fromDegreeGetObj(c, info):
+    query = '''
+    SELECT
+        obj_code,
+        lo_title,
+        description
+    FROM
+        learning_obj;
+    '''
+    c.execute(query, info)
+    return c.fetchall()
 
 # Get all data for debug
 def getAllDegree(c):
@@ -247,6 +266,7 @@ def clearAll(c):
         table_name = table[0]
         c.execute(f"DELETE FROM {table_name}")
         print(f"All entries cleared from table: {table_name}")
+
 
 def dropAll(c):
     c.execute(f"USE {db_name}")
@@ -321,7 +341,16 @@ def connect_to_db():
         print(f"Error connecting to MySQL: {e}")
         return None
 
+    create_schema_sql = f"CREATE SCHEMA IF NOT EXISTS {db_name}"
+    create_database_sql = f"CREATE DATABASE IF NOT EXISTS {db_name}"
+
     cr = cn.cursor()
+    dropAll(cr)
+    cr.execute(create_schema_sql)
+    cr.execute(create_database_sql)
+    createTables(cr)
+    print(db_name)
+    cr.execute(f"USE {db_name}")
     return cr, cn
 
 
