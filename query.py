@@ -153,13 +153,28 @@ def enterEvaluation(c, info):
 
 
 # Query
-def getInstructorCourses(c, info):
+def getInstructorSections(c, info):
     query = '''
-    SELECT s.Section_ID, s.course_num, s.num_of_students, s.sem_year, s.sem_term
-    FROM Section s
-    JOIN Instructor i ON s.instruct_ID = i.ID
-    WHERE i.ID = ? AND s.sem_year = ? AND s.sem_term = ?;'''
+    SELECT 
+        sect_id, 
+        course_num, 
+        sem_term, 
+        sem_year
+    FROM 
+        section 
+    WHERE 
+        instruct_id = %s AND
+        (
+            (sem_year > %s AND sem_year < %s)  -- Years fully between start and end year
+            OR (sem_year = %s AND sem_term >= %s)  -- Start year, from 'Fall' onwards
+            OR (sem_year = %s AND sem_term <= %s)  -- End year, up to 'Spring'
+        )
+
+    '''
+    # params = (instructor_id, start_year - 1, end_year + 1, start_year, start_term, end_year, end_term)
+    
     c.execute(query, info)
+    return c.fetchall()
 
 
 def getEval(c, info):
@@ -191,7 +206,6 @@ def fromDegreeGetCourse(c, info):
     query = '''
     SELECT
         Course.course_num,
-        Course.course_name,
         Degree_Course.is_core
     FROM
         Degree_Course
@@ -201,13 +215,11 @@ def fromDegreeGetCourse(c, info):
         Degree_Course.deg_name = %s AND Degree_Course.deg_level = %s;
     '''
     c.execute(query, info)
-    res = c.fetchall()
-    print(res)
-    return res
+    return c.fetchall()
 
 def fromDegreeGetSects(c, info):
     query = '''
-    SELECT s.* 
+    SELECT s.sect_id, s.course_num, s.sem_term, s.sem_year
     FROM Section s
     JOIN degree_course dc ON s.course_num = dc.course_num
     WHERE dc.deg_name = %s AND dc.deg_level = %s     
@@ -377,7 +389,7 @@ def connect_to_db():
         cn = pymysql.connect(
             host='localhost',
             user='root',
-            password='Thepasswordispassword1!',
+            password=db_password,
             client_flag=pymysql.constants.CLIENT.MULTI_STATEMENTS,
             autocommit=True
         )

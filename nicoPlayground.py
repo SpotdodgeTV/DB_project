@@ -1,5 +1,5 @@
 import pymysql
-# import query as q
+import query as q
 
 
 def populateTestData(c):
@@ -55,7 +55,21 @@ def populateTestData(c):
     for oc in obj_courses:
         c.execute("INSERT INTO obj_course (obj_code, course_num) VALUES (%s, %s);", oc)
 
+    sections = [
+        (1, 20, 2024, "Fall", 1234, "CS101"),
+        (6, 20, 2024, "Spring", 1234, "CS101"),
+        (2, 20, 2023, "Fall", 1234, "CS101")
+    ]
+    for sect in sections:
+        c.execute("INSERT INTO section (sect_id, num_studs, sem_year, sem_term, instruct_ID, course_num) VALUES (%s, %s, %s, %s, %s, %s)", sect)
 
+    instructors = [
+        (1234, "Klyne Smith"),
+        (4321, "King Ip Lin")
+    ]
+    for inst in instructors:
+        c.execute("INSERT INTO instructor (instruct_id, instruct_name) VALUE (%s, %s)", inst)
+    
     # Commit changes to the database
     # c.connection.commit()
 
@@ -122,6 +136,9 @@ def getLearningObjectivesForDegree(c, deg_name, deg_level):
 
 # populateTestData(cr)
 
-# print(listCoursesByObjectives(cr, "Computer Science", "BS"))
-# print(getLearningObjectivesForDegree(cr, "Computer Science", "BS" ))
+# # print(listCoursesByObjectives(cr, "Computer Science", "BS"))
+# # print(getLearningObjectivesForDegree(cr, "Computer Science", "BS" ))
+# print(q.fromDegreeGetCourse(cr, ("Mathematics", "BS")))
+# print(q.getInstructorSections(cr, 1234, 2000, "Fall", 2050, "Spring"))
+
 # q.close_db(cn)
