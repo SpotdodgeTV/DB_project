@@ -1,5 +1,5 @@
 import pymysql
-import query as q
+# import query as q
 
 
 def populateTestData(c):
@@ -34,13 +34,13 @@ def populateTestData(c):
 
     # Insert data into 'learning_obj'
     learning_objs = [
-        (1, 'Programming Fundamentals', 'Learn basic programming concepts'),
-        (2, 'Data Structures Concepts', 'Understand various data structures'),
-        (3, 'Calculus Concepts', 'Understand the basics of calculus'),
-        (4, 'Engineering Principles', 'Learn fundamental engineering concepts')
+        ('Programming Fundamentals', 'Learn basic programming concepts'),
+        ('Data Structures Concepts', 'Understand various data structures'),
+        ('Calculus Concepts', 'Understand the basics of calculus'),
+        ('Engineering Principles', 'Learn fundamental engineering concepts')
     ]
     for lo in learning_objs:
-        c.execute("INSERT INTO learning_obj (lo_title, description) VALUES (%s, %s, %s);", lo)
+        c.execute("INSERT INTO learning_obj (lo_title, description) VALUES (%s, %s);", lo)
 
     # Insert data into 'obj_course'
     obj_courses = [
@@ -54,6 +54,7 @@ def populateTestData(c):
     ]
     for oc in obj_courses:
         c.execute("INSERT INTO obj_course (obj_code, course_num) VALUES (%s, %s);", oc)
+
 
     # Commit changes to the database
     # c.connection.commit()
@@ -91,36 +92,36 @@ def getLearningObjectivesForDegree(c, deg_name, deg_level):
 # if cr is None:
 #     print("Table creation failed.")
 
-# degreeData = [
-#     ("cs", "PHD"),
-#     ("eng", "MS"),
-#     ("art", "BA"),
-#     ("math", "BS")
-# ]
+# # degreeData = [
+# #     ("cs", "PHD"),
+# #     ("eng", "MS"),
+# #     ("art", "BA"),
+# #     ("math", "BS")
+# # ]
 
-# for degree in degreeData:
-#     q.enterDegree(cr, degree)
+# # for degree in degreeData:
+# #     q.enterDegree(cr, degree)
 
-# result = q.getAllDegree(cr)
-# print(result)
-# print(len(result))
+# # result = q.getAllDegree(cr)
+# # print(result)
+# # print(len(result))
 
-# courseData = [
-#     ("CS1234", "Intro to Computer Science"),
-#     ("EN4321", "Creative Writing"),
-#     ("AR2233", "How to Use a Pencil"),
-#     ("MA1324", "Math 101: Calculating Quantum Topology")
-# ]
+# # courseData = [
+# #     ("CS1234", "Intro to Computer Science"),
+# #     ("EN4321", "Creative Writing"),
+# #     ("AR2233", "How to Use a Pencil"),
+# #     ("MA1324", "Math 101: Calculating Quantum Topology")
+# # ]
 
-# for course in courseData:
-#     q.enterCourse(cr, course)
+# # for course in courseData:
+# #     q.enterCourse(cr, course)
 
-# result = q.getTable(cr, "course")
-# print(result)
-# print(len(result))
+# # result = q.getTable(cr, "course")
+# # print(result)
+# # print(len(result))
 
 # populateTestData(cr)
-#
+
 # print(listCoursesByObjectives(cr, "Computer Science", "BS"))
 # print(getLearningObjectivesForDegree(cr, "Computer Science", "BS" ))
 # q.close_db(cn)
