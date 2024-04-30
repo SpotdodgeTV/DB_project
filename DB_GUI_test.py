@@ -255,7 +255,6 @@ class Instructor(tk.Frame):
                       displayAll(self.tree, cr, self.name))
                   ).grid(row=4, column=3)
 
-
 class Evaluation(tk.Frame):
     def __init__(self, parent, controller: App, name="Evaluation"):
         cr = controller.cursor
@@ -265,21 +264,54 @@ class Evaluation(tk.Frame):
         label = tk.Label(self, text=name)
         label.grid(row=0, column=0, columnspan=6)
 
-        ttk.Label(self, text="Degree Name", anchor="center").grid(row=1, column=0)
-        self.entry_name = ttk.Entry(self)
-        self.entry_name.grid(row=1, column=1)
-        ttk.Label(self, text="Degree Level", anchor="center").grid(row=1, column=2)
-        self.entry_level = ttk.Entry(self)
-        self.entry_level.grid(row=1, column=3)
-        ttk.Label(self, text="Semester Year", anchor="center").grid(row=1, column=4)
-        self.entry_year = ttk.Entry(self)
-        self.entry_year.grid(row=1, column=5)
-        ttk.Label(self, text="Semester Term", anchor="center").grid(row=1, column=6)
-        self.entry_term = ttk.Entry(self)
-        self.entry_term.grid(row=1, column=7)
-        ttk.Label(self, text="Instructor ID", anchor="center").grid(row=1, column=8)
-        self.entry_id = ttk.Entry(self)
-        self.entry_id.grid(row=1, column=9)
+        # Main frame to contain all the subframes
+        main_frame = tk.Frame(self)
+        main_frame.grid(row=1, column=0)
+
+        # Degree Name
+        self.degree_name_frame = tk.Frame(main_frame)
+        self.degree_name_frame.grid(
+            row=0, column=0, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.degree_name_frame, text="Degree Name",
+                  anchor="center").grid(row=0, column=0, sticky="ew")
+        self.entry_name = ttk.Entry(self.degree_name_frame, width=10)
+        self.entry_name.grid(row=0, column=1, sticky="ew")
+
+        # Degree Level
+        self.degree_level_frame = tk.Frame(main_frame)
+        self.degree_level_frame.grid(
+            row=0, column=1, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.degree_level_frame, text="Degree Level",
+                  anchor="center").grid(row=0, column=0, sticky="ew")
+        self.entry_level = ttk.Entry(self.degree_level_frame, width=10)
+        self.entry_level.grid(row=0, column=1, sticky="ew")
+
+        # Semester Year
+        self.semester_year_frame = tk.Frame(main_frame)
+        self.semester_year_frame.grid(
+            row=0, column=2, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.semester_year_frame, text="Semester Year",
+                  anchor="center").grid(row=0, column=0, sticky="ew")
+        self.entry_year = ttk.Entry(self.semester_year_frame, width=10)
+        self.entry_year.grid(row=0, column=1, sticky="ew")
+
+        # Semester Term
+        self.semester_term_frame = tk.Frame(main_frame)
+        self.semester_term_frame.grid(
+            row=0, column=3, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.semester_term_frame, text="Semester Term",
+                  anchor="center").grid(row=0, column=0, sticky="ew")
+        self.entry_term = ttk.Entry(self.semester_term_frame, width=10)
+        self.entry_term.grid(row=0, column=1, sticky="ew")
+
+        # Instructor ID
+        self.instructor_id_frame = tk.Frame(main_frame)
+        self.instructor_id_frame.grid(
+            row=0, column=4, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.instructor_id_frame, text="Instructor ID",
+                  anchor="center").grid(row=0, column=0, sticky="ew")
+        self.entry_id = ttk.Entry(self.instructor_id_frame, width=10)
+        self.entry_id.grid(row=0, column=1, sticky="ew")
 
         info = (self.entry_id.get(), self.entry_year.get(),
                 self.entry_term.get())
@@ -312,8 +344,10 @@ class Evaluation(tk.Frame):
 
         self.tree.grid(row=4, column=0, columnspan=6)
 
-        ttk.Button(self, text="Refresh", command=lambda: displayAll(self.tree, cr, self.name)).grid(row=5, column=0)
-        ttk.Button(self, text="Clear", command=lambda: clearAll(self.tree, cr, self.name)).grid(row=5, column=1)
+        ttk.Button(self, text="Refresh", command=lambda: displayAll(
+            self.tree, cr, self.name)).grid(row=5, column=0)
+        ttk.Button(self, text="Clear", command=lambda: clearAll(
+            self.tree, cr, self.name)).grid(row=5, column=1)
 
         ttk.Label(self, text="Semester Year").grid(row=6, column=0)
         ttk.Label(self, text="Semester Term").grid(row=6, column=1)
@@ -352,7 +386,7 @@ class Evaluation(tk.Frame):
         # self.entry_num_C.grid(row=6, column=5)
         # self.entry_num_F = ttk.Entry(self)
         # self.entry_num_F.grid(row=6, column=6)
-        #
+        
         # tk.Button(self, text="Add",
         #           command=lambda: (
         #               q.enterEvaluation(cr,
@@ -363,7 +397,6 @@ class Evaluation(tk.Frame):
         #                                  self.entry_num_B.get(), self.entry_num_C.get(), self.entry_num_F.get())),
         #               displayAll(self.tree, cr, self.name))
         #           ).grid(row=2, column=3)
-
 
 class Section(tk.Frame):
     def __init__(self, parent, controller: App, tableName="Section", name="Section"):
