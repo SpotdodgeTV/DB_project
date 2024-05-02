@@ -135,7 +135,7 @@ class App(tk.Tk):
 
         # Create and add pages
         for i, Page in enumerate([Degree, Course, Objective, DegCourse, ObjCourse, Instructor, Section, Evaluation,
-                                  DegreeSearch, InstructorSearch, CourseSearch]):
+                                  DegreeSearch, InstructorSearch, CourseSearch, PassRate]):
             page = Page(self.container, self)
             self.pages[i] = page
             page.grid(row=1, column=0, sticky="nsew")
@@ -277,7 +277,8 @@ class Evaluation(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.name = name
         label = tk.Label(self, text=name)
-        label.grid(row=0, column=0, columnspan=6)
+        label.grid(row=0, column=0, columnspan=4)
+        self.tableName = "Evaluation"
 
         # Main frame to contain all the subframes
         main_frame = tk.Frame(self)
@@ -320,98 +321,125 @@ class Evaluation(tk.Frame):
         self.entry_term.grid(row=0, column=1, sticky="ew")
 
         # Instructor ID
-        self.instructor_id_frame = tk.Frame(main_frame)
-        self.instructor_id_frame.grid(
+        self.section_id_frame = tk.Frame(main_frame)
+        self.section_id_frame.grid(
             row=0, column=4, padx=5, pady=5, sticky="ew")
-        ttk.Label(self.instructor_id_frame, text="Instructor ID",
+        ttk.Label(self.section_id_frame, text="Instructor ID",
                   anchor="center").grid(row=0, column=0, sticky="ew")
-        self.entry_id = ttk.Entry(self.instructor_id_frame, width=10)
-        self.entry_id.grid(row=0, column=1, sticky="ew")
+        self.entry_instruct = ttk.Entry(self.section_id_frame, width=10)
+        self.entry_instruct.grid(row=0, column=1, sticky="ew")
 
-        info = (self.entry_id.get(), self.entry_year.get(),
-                self.entry_term.get())
-
-        sections = q.fromInstructorGetSections(cr, info)
-        self.tree = ttk.Treeview(self, columns=(
-            ""), show="headings")
-
-        self.tree = ttk.Treeview(self, columns=(
-            "sect_id", "course_num"), show="headings")
-        populateTree(self.tree, sections)
+        tk.Button(main_frame, text="Search",
+                  command=lambda: (
+                        info := (self.entry_name.get(), self.entry_level.get(), self.entry_year.get(), self.entry_term.get(), self.entry_instruct.get()),
+                         populateTree(self.tree, q.getEval(cr, info))
+                        # displayAll(self.tree, cr, self.tableName)
+                  )
+        ).grid(row=0, column=5)
 
         # info display
         self.tree = ttk.Treeview(self, columns=(
-            "sem_year", "sem_term", "sect_id", "eval_obj", "eval_description", "obj_code", "course_num", "instruct_id",
-            "num_A", "num_B", "num_C", "num_F"), show="headings")
-        self.tree.heading("sem_year", text="Semester Year")
-        self.tree.heading("sem_term", text="Semester Term")
-        self.tree.heading("sect_id", text="Section ID")
-        self.tree.heading("eval_obj", text="Evaluation Objective")
-        self.tree.heading("eval_description", text="Evaluation Description")
-        self.tree.heading("obj_code", text="Object Code")
+            "course_num", "sect_id", "obj_code", "eval_obj", "num_A", "num_B", "num_C", "num_F", "eval_description"), show="headings")
         self.tree.heading("course_num", text="Course Number")
-        self.tree.heading("instruct_id", text="Instructor ID")
+        self.tree.heading("sect_id", text="Section ID")
+        self.tree.heading("obj_code", text="Object Code")
+        self.tree.heading("eval_obj", text="Evaluation Objective")
         self.tree.heading("num_A", text="Number of A Grades")
         self.tree.heading("num_B", text="Number of B Grades")
         self.tree.heading("num_C", text="Number of C Grades")
         self.tree.heading("num_F", text="Number of F Grades")
-        self.tree.grid(row=4, column=0, columnspan=6)
-
-        self.tree.grid(row=4, column=0, columnspan=6)
+        self.tree.heading("eval_description", text="Evaluation Description")
+        self.tree.grid(row=2, column=0, columnspan=4)
 
         ttk.Button(self, text="Refresh", command=lambda: displayAll(
             self.tree, cr, self.name)).grid(row=5, column=0)
         ttk.Button(self, text="Clear", command=lambda: clearAll(
             self.tree, cr, self.name)).grid(row=5, column=1)
+        
+        second_frame = tk.Frame(self)
+        second_frame.grid(row=8, column=0)
+        
+        self.section_id_frame = tk.Frame(second_frame)
+        self.section_id_frame.grid(
+            row=0, column=4, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.section_id_frame, text="Section ID",
+                  anchor="center").grid(row=0, column=0, sticky="ew")
+        self.entry_id = ttk.Entry(self.section_id_frame, width=10)
+        self.entry_id.grid(row=0, column=1, sticky="ew")
+       
+        # Section ID
+        self.section_id_frame = tk.Frame(second_frame)
+        self.section_id_frame.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.section_id_frame, text="Section ID").grid(row=0, column=0, sticky="ew")
+        self.entry_sect_id = ttk.Entry(self.section_id_frame, width=10)
+        self.entry_sect_id.grid(row=0, column=1, sticky="ew")
 
-        ttk.Label(self, text="Semester Year").grid(row=6, column=0)
-        ttk.Label(self, text="Semester Term").grid(row=6, column=1)
-        ttk.Label(self, text="Section ID").grid(row=6, column=2)
-        ttk.Label(self, text="Learning Objective").grid(row=6, column=3)
-        ttk.Label(self, text="Description").grid(row=6, column=4)
-        ttk.Label(self, text="Object Code").grid(row=6, column=5)
-        ttk.Label(self, text="Course Number").grid(row=8, column=6)
-        ttk.Label(self, text="Instructor ID").grid(row=8, column=7)
-        ttk.Label(self, text="Number of As").grid(row=8, column=8)
-        ttk.Label(self, text="Number of Bs").grid(row=8, column=9)
-        ttk.Label(self, text="Number of Cs").grid(row=8, column=9)
-        ttk.Label(self, text="Number of Fs").grid(row=8, column=6)
+        # Learning Objective
+        self.learning_obj_frame = tk.Frame(second_frame)
+        self.learning_obj_frame.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.learning_obj_frame, text="Evaluation Objective").grid(row=0, column=0, sticky="ew")
+        self.entry_eval_obj = ttk.Entry(self.learning_obj_frame, width=10)
+        self.entry_eval_obj.grid(row=0, column=1, sticky="ew")
 
-        # self.entry_sem_year = ttk.Entry(self)
-        # self.entry_sem_year.grid(row=4, column=1)
-        # self.entry_sem_term = ttk.Entry(self)
-        # self.entry_sem_term.grid(row=4, column=2)
-        # self.entry_sect_id = ttk.Entry(self)
-        # self.entry_sect_id.grid(row=4, column=3)
-        # self.entry_eval_obj = ttk.Entry(self)
-        # self.entry_eval_obj.grid(row=4, column=4)
-        # self.entry_eval_description = ttk.Entry(self)
-        # self.entry_eval_description.grid(row=4, column=5)
-        # self.entry_obj_code = ttk.Entry(self)
-        # self.entry_obj_code.grid(row=4, column=6)
-        # self.entry_course_num = ttk.Entry(self)
-        # self.entry_course_num.grid(row=6, column=1)
-        # self.entry_instruct_id = ttk.Entry(self)
-        # self.entry_instruct_id.grid(row=6, column=2)
-        # self.entry_num_A = ttk.Entry(self)
-        # self.entry_num_A.grid(row=6, column=3)
-        # self.entry_num_B = ttk.Entry(self)
-        # self.entry_num_B.grid(row=6, column=4)
-        # self.entry_num_C = ttk.Entry(self)
-        # self.entry_num_C.grid(row=6, column=5)
-        # self.entry_num_F = ttk.Entry(self)
-        # self.entry_num_F.grid(row=6, column=6)
-        #
-        # tk.Button(self, text="Add",
-        #           command=lambda: (
-        #               q.enterEvaluation(cr,
-        #                                 (self.entry_sem_year.get(), self.entry_sem_term.get(), self.entry_sect_id.get(),
-        #                                  self.entry_eval_obj.get(), self.entry_eval_description.get(),
-        #                                  self.entry_obj_code.get(), self.entry_course_num.get(),
-        #                                  self.entry_instruct_id.get(), self.entry_num_A.get(),
-        #                                  self.entry_num_B.get(), self.entry_num_C.get(), self.entry_num_F.get())),
-        #               displayAll(self.tree, cr, self.name))
-        #           ).grid(row=2, column=3)
+        # Description
+        self.description_frame = tk.Frame(second_frame)
+        self.description_frame.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.description_frame, text="Description").grid(row=0, column=0, sticky="ew")
+        self.entry_eval_description = ttk.Entry(self.description_frame, width=10)
+        self.entry_eval_description.grid(row=0, column=1, sticky="ew")
+
+        # Object Code
+        self.obj_code_frame = tk.Frame(second_frame)
+        self.obj_code_frame.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.obj_code_frame, text="Object Code").grid(row=0, column=0, sticky="ew")
+        self.entry_obj_code = ttk.Entry(self.obj_code_frame, width=10)
+        self.entry_obj_code.grid(row=0, column=1, sticky="ew")
+
+        # Course Number
+        self.course_num_frame = tk.Frame(second_frame)
+        self.course_num_frame.grid(row=0, column=4, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.course_num_frame, text="Course Number").grid(row=0, column=0, sticky="ew")
+        self.entry_course_num = ttk.Entry(self.course_num_frame, width=10)
+        self.entry_course_num.grid(row=0, column=1, sticky="ew")
+
+        # Number of As
+        self.num_a_frame = tk.Frame(second_frame)
+        self.num_a_frame.grid(row=0, column=6, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.num_a_frame, text="Number of As").grid(row=0, column=0, sticky="ew")
+        self.entry_num_A = ttk.Entry(self.num_a_frame, width=10)
+        self.entry_num_A.grid(row=0, column=1, sticky="ew")
+
+        # Number of Bs
+        self.num_b_frame = tk.Frame(second_frame)
+        self.num_b_frame.grid(row=0, column=7, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.num_b_frame, text="Number of Bs").grid(row=0, column=0, sticky="ew")
+        self.entry_num_B = ttk.Entry(self.num_b_frame, width=10)
+        self.entry_num_B.grid(row=0, column=1, sticky="ew")
+
+        # Number of Cs
+        self.num_c_frame = tk.Frame(second_frame)
+        self.num_c_frame.grid(row=0, column=8, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.num_c_frame, text="Number of Cs").grid(row=0, column=0, sticky="ew")
+        self.entry_num_C = ttk.Entry(self.num_c_frame, width=10)
+        self.entry_num_C.grid(row=0, column=1, sticky="ew")
+
+        # Number of Fs
+        self.num_f_frame = tk.Frame(second_frame)
+        self.num_f_frame.grid(row=0, column=9, padx=5, pady=5, sticky="ew")
+        ttk.Label(self.num_f_frame, text="Number of Fs").grid(row=0, column=0, sticky="ew")
+        self.entry_num_F = ttk.Entry(self.num_f_frame, width=10)
+        self.entry_num_F.grid(row=0, column=1, sticky="ew")
+        
+        tk.Button(second_frame, text="Add",
+                  command=lambda: (
+                      info := (self.entry_eval_description.get(), self.entry_eval_obj.get(), self.entry_num_A.get(),
+                                         self.entry_num_B.get(), self.entry_num_C.get(), self.entry_num_F.get(), 
+                                         self.entry_year.get(), self.entry_term.get(), self.entry_course_num.get(), 
+                                         self.entry_sect_id.get(), self.entry_obj_code.get(), self.entry_name.get(), self.entry_level.get() ),
+                    q.updateEvaluation(cr, info),
+                    info := (self.entry_name.get(), self.entry_level.get(), self.entry_year.get(), self.entry_term.get(), self.entry_instruct.get()),
+                         populateTree(self.tree, q.getEval(cr, info))
+                  )).grid(row=0, column=10, padx=5, pady=5, sticky="ew")
 
 
 class Section(tk.Frame):
@@ -475,8 +503,10 @@ class Section(tk.Frame):
                       q.enterSection(cr, (self.entry_id.get(), self.entry_number.get(), self.entry_sem_year.get(),
                                           self.entry_sem_term.get(), self.entry_instruct_id.get(),
                                           self.entry_course_num.get())),
-                      displayAll(self.tree, cr, self.tableName))
-                  ).grid(row=4, column=7)
+                      displayAll(self.tree, cr, self.tableName),
+                      q.addEvalSkeleton(cr, (self.entry_sem_year.get(), self.entry_sem_term.get(), self.entry_id.get(), self.entry_course_num.get(), self.entry_instruct_id.get()))
+                  )).grid(row=4, column=7)
+        
 
 
 class Objective(tk.Frame):
@@ -577,9 +607,9 @@ class ObjCourse(tk.Frame):
 
         # info display
         self.tree = ttk.Treeview(self, columns=(
-            "course_num", "obj_code"), show="headings")
-        self.tree.heading("course_num", text="Course Number")
+             "obj_code", "course_num"), show="headings")
         self.tree.heading("obj_code", text="Objective Code")
+        self.tree.heading("course_num", text="Course Number")
         self.tree.grid(row=1, column=0, columnspan=3)
 
         ttk.Button(self, text="Refresh", command=lambda: displayAll(self.tree, cr, self.tableName)).grid(row=2,
@@ -597,8 +627,7 @@ class ObjCourse(tk.Frame):
 
         tk.Button(self, text="Add",
                   command=lambda: (
-                      q.enterObjCourse(cr, (self.entry_num.get(), self.entry_code.get(), self.entry_course_code.get(),
-                                            self.entry_is_core.get())),
+                      q.enterObjCourse(cr, (self.entry_num.get(), self.entry_code.get())),
                       displayAll(self.tree, cr, self.tableName))
                   ).grid(row=4, column=4)
 
@@ -619,8 +648,6 @@ class DegreeSearch(tk.Frame):
         ttk.Label(self, text="Level", anchor="center").grid(row=1, column=2)
         self.entry_level = ttk.Entry(self)
         self.entry_level.grid(row=1, column=3)
-
-        
 
         tk.Button(self, text="Search",
                   command=lambda: (
@@ -779,6 +806,41 @@ class InstructorSearch(tk.Frame):
         self.treeSect.heading("SemYear", text="Semester Year")
         self.treeSect.grid(row=4, column=0, columnspan=6)
 
+class PassRate(tk.Frame):
+    def __init__(self, parent, controller: App, name="Pass Rate"):
+        cr = controller.cursor
+
+        tk.Frame.__init__(self, parent)
+        self.name = name
+        label = tk.Label(self, text=name)
+        label.grid(row=0, column=0, columnspan=4)
+
+        ttk.Label(self, text="Semester Term", anchor="center").grid(row=1, column=0)
+        self.entry_term = ttk.Entry(self)
+        self.entry_term.grid(row=1, column=1)
+        ttk.Label(self, text="Semester Year", anchor="center").grid(row=1, column=2)
+        self.entry_year = ttk.Entry(self)
+        self.entry_year.grid(row=1, column=3)
+        ttk.Label(self, text="Percentage", anchor="center").grid(row=1, column=4)
+        self.entry_percent = ttk.Entry(self)
+        self.entry_percent.grid(row=1, column=5)
+
+        tk.Button(self, text="Search",
+                  command=lambda: (
+                        info := (self.entry_term.get(), self.entry_year.get()),
+                        populateTree(self.tree, q.giveNumOfStuds(cr, info, self.entry_percent.get())),
+                  )
+                  ).grid(row=1, column=6)
+
+        # info display
+        ttk.Label(self, text="Sections w/ Passing Rate",
+                  anchor="center").grid(row=2, column=0)
+        self.tree = ttk.Treeview(
+            self, columns=("Section ID", "Course Number", "Pass Percentage"), show="headings")
+        self.tree.heading("Section ID", text="Section ID")
+        self.tree.heading("Course Number", text="Course Number")
+        self.tree.heading("Pass Percentage", text="Pass Percentage")
+        self.tree.grid(row=3, column=0, columnspan=2)
 
 def populateTree(tree, values):
     # Clear existing items from the treeview

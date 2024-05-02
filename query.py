@@ -2,7 +2,7 @@ import pymysql
 import pymysql.cursors
 import os
 from dotenv import load_dotenv
-import nicoPlayground
+# import nicoPlayground
 
 load_dotenv()
 db_password = os.getenv('DB_PASSWORD')
@@ -12,16 +12,6 @@ db_name = os.getenv('DB_NAME')
 # data manipulation commands
 def createTables(c):
     create_table_queries = [
-        """
-        CREATE TABLE IF NOT EXISTS section (
-            sect_id INT AUTO_INCREMENT PRIMARY KEY,
-            num_studs INT UNSIGNED,
-            sem_year INT UNSIGNED NOT NULL,
-            sem_term VARCHAR(6) NOT NULL,
-            instruct_id INT UNSIGNED NOT NULL,
-            course_num VARCHAR(6) NOT NULL
-        )
-        """,
         """
         CREATE TABLE IF NOT EXISTS learning_obj (
             obj_code INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -49,6 +39,7 @@ def createTables(c):
             course_num VARCHAR(8) NOT NULL,
             is_core BOOL,
             FOREIGN KEY (course_num) REFERENCES course(course_num),
+            FOREIGN KEY (deg_name, deg_level) REFERENCES degree(deg_name, deg_level),
             PRIMARY KEY (course_num, deg_name, deg_level)
         )
         """,
@@ -56,7 +47,9 @@ def createTables(c):
         CREATE TABLE IF NOT EXISTS obj_course (
             obj_code INT UNSIGNED NOT NULL,
             course_num VARCHAR(8) NOT NULL,
-            PRIMARY KEY (obj_code, course_num)
+            PRIMARY KEY (obj_code, course_num),
+            FOREIGN KEY (course_num) REFERENCES course(course_num),
+            FOREIGN KEY (obj_code) REFERENCES learning_obj(obj_code)
         )
         """,
         """
@@ -73,21 +66,39 @@ def createTables(c):
         )
         """,
         """
+        CREATE TABLE IF NOT EXISTS section (
+            sect_id INT AUTO_INCREMENT,
+            num_studs INT UNSIGNED,
+            sem_year INT UNSIGNED NOT NULL,
+            sem_term VARCHAR(6) NOT NULL,
+            instruct_id INT UNSIGNED NOT NULL,
+            course_num VARCHAR(8) NOT NULL,  -- Updated to VARCHAR(8) to match the course table
+            PRIMARY KEY (sect_id, course_num),
+            FOREIGN KEY (course_num) REFERENCES course(course_num),
+            FOREIGN KEY (instruct_id) REFERENCES instructor(instruct_id)  -- Corrected 'REFERENCES'
+        )
+        """,
+        """
         CREATE TABLE IF NOT EXISTS evaluation (
             sem_year INT UNSIGNED NOT NULL,
             sem_term VARCHAR(6) NOT NULL,
             sect_id INT UNSIGNED NOT NULL,
-            eval_obj VARCHAR(50) NOT NULL,
+            eval_obj VARCHAR(50),
             eval_description VARCHAR(500),
             obj_code INT UNSIGNED, 
-            course_num VARCHAR(6) NOT NULL,
+            course_num VARCHAR(8) NOT NULL,
             instruct_id INT UNSIGNED,
+            deg_name VARCHAR(50),
+            deg_level VARCHAR(50),
             num_A INT UNSIGNED,
             num_B INT UNSIGNED,
             num_C INT UNSIGNED,
             num_F INT UNSIGNED,
-            PRIMARY KEY (sem_year, sem_term, sect_id, eval_obj, course_num)
+            PRIMARY KEY (sem_year, sem_term, sect_id, obj_code, course_num, deg_name, deg_level)
         )
+        """,
+        """
+        SET FOREIGN_KEY_CHECKS = 1;
         """
     ]
 
@@ -147,8 +158,8 @@ def enterObjCourse(c, info):
 
 def enterEvaluation(c, info):
     query = '''
-    INSERT INTO evaluation (sem_year, sem_term, sect_id, eval_obj, eval_description, obj_code, course_num, instruct_id, num_A, num_B, num_C, num_F)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'''
+    INSERT INTO evaluation (sem_year, sem_term, sect_id, eval_obj, eval_description, obj_code, course_num, instruct_id, deg_name, deg_level, num_A, num_B, num_C, num_F)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'''
     c.execute(query, info)
 
 
@@ -222,28 +233,99 @@ def listCoursesByObjectives(c, info):
     return c.fetchall()
 
 def getEval(c, info):
+    print(info)
     query = '''
     SELECT
-        e.section_ID,
-        e.course_number,
-        e.eval_obj,
-        e.#_A as NumberOfA,
-        e.#_B as NumberOfB,
-        e.#_C as NumberOfC,
-        e.#_F as NumberOfF,
-        e.eval_descript,
-        e.deg_name,
-        e.deg_lvl 
+        e.course_num, e.sect_id, e.obj_code, e.eval_obj, e.num_A, e.num_B, e.num_C, e.num_F, e.eval_description
     FROM
         Evaluation e
-    JOIN
-        Section s ON e.section_ID = s.Section_ID AND e.instruct_ID = s.instruct_ID
     WHERE
-        e.instruct_ID = ? AND 
-        s.sem_year = ? AND  
-        s.sem_term = ?; 
+        e.deg_name = %s AND
+        e.deg_level = %s AND 
+        e.sem_year = %s AND  
+        e.sem_term = %s AND
+        e.instruct_ID = %s;
     '''
-    c.execute(query)
+    c.execute(query, info)
+    result = c.fetchall()
+    print(result)
+    return result
+
+def collectObjCodeFromCourse(c, info):
+    query = '''
+    SELECT obj_code
+    FROM obj_course
+    WHERE course_num = %s;
+    '''
+    c.execute(query, info)
+    return c.fetchall()
+
+def collectDegFromCourse(c, info):
+    query = '''
+    SELECT deg_name, deg_level
+    FROM degree_course
+    WHERE course_num = %s;
+    '''
+    c.execute(query, info)
+    return c.fetchall()
+
+def addEvalSkeleton(c, info):
+    results = collectObjCodeFromCourse(c, info[3])
+    degResults = collectDegFromCourse(c, info[3])
+    for deg in degResults:
+        temp1 = info + deg
+        for obj in results:
+            temp = temp1 + obj
+            query = '''
+            INSERT INTO evaluation (sem_year, sem_term, sect_id, course_num, instruct_id, deg_name, deg_level, obj_code)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+            '''
+            c.execute(query, temp)
+
+def updateEvaluation(c, info):
+    query = '''
+    UPDATE Evaluation
+    SET eval_description = %s, eval_obj = %s, num_A = %s, num_B = %s, num_C = %s, num_F = %s 
+    WHERE sem_year = %s AND sem_term = %s AND course_num = %s and sect_id = %s AND obj_code = %s AND deg_name = %s AND deg_level = %s;
+    '''
+    c.execute(query, info)
+
+def giveNumOfStuds(c, info, percentage):
+    print(info)
+    print(percentage)
+    query = '''
+    SELECT
+        s.sect_id,
+        s.course_num,
+        s.num_studs,
+        e.num_F
+    FROM Section s
+    JOIN Evaluation e ON s.sect_id = e.sect_id
+        AND s.course_num = e.course_num
+        AND s.sem_year = e.sem_year
+        AND s.sem_term = e.sem_term
+    WHERE s.sem_term = %s
+    AND s.sem_year = %s;
+    '''
+    c.execute(query, info)
+    results = c.fetchall()
+    print(results)
+    temp = []
+    toReturn = []
+    for result in results:
+        if result[2] == None or result[3] == None:
+            continue
+        if result[3] > result[2] or result[2] == 0:
+            passPercent = 0
+        else:
+            passPercent = (1-(result[3]/result[2]))
+        if passPercent >= int(percentage)/100:
+            temp.append(result)
+    for entry in temp:
+        toReturn.append((entry[0], entry[1], f"{(int)(100*passPercent)}%"))
+
+    print(toReturn)
+    return toReturn
 
 
 def fromDegreeGetCourse(c, info):
@@ -451,7 +533,7 @@ def connect_to_db():
     cr.execute(create_database_sql)
     createTables(cr)
     print(db_name)
-    nicoPlayground.populateTestData(cr)
+    # nicoPlayground.populateTestData(cr)
     cr.execute(f"USE {db_name}")
 
 
@@ -468,3 +550,40 @@ def close_db(cn: pymysql.connections.Connection):
 # driver(cr, default)
 
 # cn.close()
+
+
+
+# cr = controller.cursor
+
+#         tk.Frame.__init__(self, parent)
+#         self.name = name
+#         label = tk.Label(self, text=name)
+#         label.grid(row=0, column=0, columnspan=4)
+
+#         ttk.Label(self, text="Name", anchor="center").grid(row=1, column=0)
+#         self.entry_name = ttk.Entry(self)
+#         self.entry_name.grid(row=1, column=1)
+#         ttk.Label(self, text="Level", anchor="center").grid(row=1, column=2)
+#         self.entry_level = ttk.Entry(self)
+#         self.entry_level.grid(row=1, column=3)
+
+        
+
+#         tk.Button(self, text="Search",
+#                   command=lambda: (
+#                         info := (self.entry_name.get(), self.entry_level.get()),
+#                         populateTree(self.treeCourse, q.fromDegreeGetCourse(cr, info)),
+#                         populateTree(self.treeSect, q.fromDegreeGetSects(cr, info)),
+#                         populateTree(self.treeObj, q.getLearningObjectivesForDegree(cr, info)),
+#                         populateTree(self.treeCO, q.listCoursesByObjectives(cr, info))
+#                   )
+#                   ).grid(row=1, column=5)
+
+#         # info display
+#         ttk.Label(self, text="Associated Courses",
+#                   anchor="center").grid(row=2, column=0)
+#         self.treeCourse = ttk.Treeview(
+#             self, columns=("Name", "IsCore"), show="headings")
+#         self.treeCourse.heading("Name", text="Course Number")
+#         self.treeCourse.heading("IsCore", text="IsCore")
+#         self.treeCourse.grid(row=3, column=0, columnspan=2)
